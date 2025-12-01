@@ -6,9 +6,6 @@ class UIManager {
         this.gridElement = null;
         this.scoreElement = null;
         this.bestScoreElement = null;
-        this.gameOverModal = null;
-        this.leaderboardModal = null;
-        this.leaderboardTable = null;
         this.createUI();
         this.setupEventListeners();
     }
@@ -76,53 +73,14 @@ class UIManager {
         this.gridContainer.appendChild(this.gridElement);
         this.container.appendChild(this.gridContainer);
 
-         this.gameOverModal = this.createElement('div', 'game-over-modal');
-        const gameOverContent = this.createElement('div', 'modal-content');
-        
-        const gameOverTitle = this.createElement('h2', '', 'Game over!');
-        gameOverContent.appendChild(gameOverTitle);
-
-        const gameOverMessage = this.createElement('p', 'message', 'Score: ' + this.game.score);
-        gameOverContent.appendChild(gameOverMessage);
-
-        const inputGroup = this.createElement('div', 'input-group');
-        const nameInput = this.createElement('input', 'name-input', '');
-        nameInput.type = 'text';
-        nameInput.placeholder = 'Input your username';
-        inputGroup.appendChild(nameInput);
-        gameOverContent.appendChild(inputGroup);
-
-        const saveBtn = this.createElement('button', 'btn', 'Сохранить результат');
-        saveBtn.onclick = () => this.saveScore(nameInput.value);
-        gameOverContent.appendChild(saveBtn);
-
-        const restartBtn = this.createElement('button', 'btn', 'New game');
-        restartBtn.onclick = () => {
-            this.gameOverModal.style.display = 'none';
-            this.newGame();
-        };
-        gameOverContent.appendChild(restartBtn);
-
-        this.gameOverModal.appendChild(gameOverContent);
-        document.body.appendChild(this.gameOverModal);
-
-        this.leaderboardModal = this.createElement('div', 'leaderboard-modal');
-        const leaderboardContent = this.createElement('div', 'modal-content');
-        
-        const leaderboardTitle = this.createElement('h2', '', 'Leaderboard');
-        leaderboardContent.appendChild(leaderboardTitle);
-
-        this.leaderboardTable = this.createElement('div', 'leaderboard-table');
-        leaderboardContent.appendChild(this.leaderboardTable);
-
-        const closeBtn = this.createElement('button', 'btn', 'Close');
-        closeBtn.onclick = () => this.leaderboardModal.style.display = 'none';
-        leaderboardContent.appendChild(closeBtn);
-
-        this.leaderboardModal.appendChild(leaderboardContent);
-        document.body.appendChild(this.leaderboardModal);
-
-        this.updateDisplay();
+        const footer = this.createElement('footer', 'footer');
+        const footerText1 = this.createElement('p', '', 'Semyon Shevchenko');
+        const footerText2 = this.createElement('p', '', 'tg:@boredot');
+        const footerText3 = this.createElement('p', '', '409886@niuitmo.ru');
+        footer.appendChild(footerText1);
+        footer.appendChild(footerText2);
+        footer.appendChild(footerText3);
+        document.body.appendChild(footer);
 
         this.updateDisplay(); 
     }
@@ -196,42 +154,12 @@ class UIManager {
     }
 
     showGameOver() {
-        const gameOverContent = this.gameOverModal.querySelector('.modal-content');
-        const message = gameOverContent.querySelector('.message');
-        message.textContent = `Game over! Score: ${this.game.score}`;
-        message.style.display = 'block';
-        
-        const inputGroup = gameOverContent.querySelector('.input-group');
-        inputGroup.style.display = 'block';
-
-        const saveBtn = gameOverContent.querySelector('button[onclick*="saveScore"]');
-        saveBtn.style.display = 'inline-block';
-
-        this.gameOverModal.style.display = 'flex';
-    }
-
-    saveScore(name) {
-        if (name.trim()) {
-            storageManager.saveScore(name, this.game.score);
-            
-            const gameOverContent = this.gameOverModal.querySelector('.modal-content');
-            const message = gameOverContent.querySelector('.message');
-            message.textContent = 'Ваш рекорд сохранен!';
-            
-            const inputGroup = gameOverContent.querySelector('.input-group');
-            inputGroup.style.display = 'none';
-            
-            const saveBtn = gameOverContent.querySelector('button[onclick*="saveScore"]');
-            saveBtn.style.display = 'none';
-            
-            this.updateBestScore();
-        }
+        const gameOverModal = new GameOverModal(this.game, this);
     }
 
     newGame() {
         this.game.reset();
         this.updateDisplay();
-        this.gameOverModal.style.display = 'none';
     }
 
     undo() {
@@ -241,49 +169,6 @@ class UIManager {
     }
 
     showLeaderboard() {
-        const leaderboard = storageManager.getLeaderboard();
-        this.updateLeaderboardTable(leaderboard);
-        this.leaderboardModal.style.display = 'flex';
-    }
-
-    updateLeaderboardTable(leaderboard) {
-        this.leaderboardTable.innerHTML = '';
-        
-        if (leaderboard.length === 0) {
-            const noRecords = this.createElement('p', '', 'No records yet');
-            this.leaderboardTable.appendChild(noRecords);
-            return;
-        }
-
-        const table = this.createElement('table', 'leaderboard');
-        const headerRow = this.createElement('tr', '');
-        
-        const positionHeader = this.createElement('th', '', '#');
-        const nameHeader = this.createElement('th', '', 'Name');
-        const scoreHeader = this.createElement('th', '', 'Score');
-        const dateHeader = this.createElement('th', '', 'Date');
-        
-        headerRow.appendChild(positionHeader);
-        headerRow.appendChild(nameHeader);
-        headerRow.appendChild(scoreHeader);
-        headerRow.appendChild(dateHeader);
-        table.appendChild(headerRow);
-
-        leaderboard.forEach((record, index) => {
-            const row = this.createElement('tr', '');
-
-            const positionCell = this.createElement('td', '', (index + 1).toString());
-            const nameCell = this.createElement('td', '', record.name);
-            const scoreCell = this.createElement('td', '', record.score.toString());
-            const dateCell = this.createElement('td', '', record.date);
-            
-            row.appendChild(positionCell);
-            row.appendChild(nameCell);
-            row.appendChild(scoreCell);
-            row.appendChild(dateCell);
-            table.appendChild(row);
-        });
-
-        this.leaderboardTable.appendChild(table);
+        const leaderboardModal = new LeaderboardModal(this);
     }
 }
