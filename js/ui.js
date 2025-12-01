@@ -6,6 +6,7 @@ class UIManager {
         this.gridElement = null;
         this.scoreElement = null;
         this.bestScoreElement = null;
+        this.gameOverModal = null;
         this.createUI();
         this.setupEventListeners();
     }
@@ -28,14 +29,14 @@ class UIManager {
         const scoresContainer = this.createElement('div', 'scores-container');
         
         const scoreBox = this.createElement('div', 'score-box');
-        const scoreLabel = this.createElement('p', '', 'СЧЕТ');
+        const scoreLabel = this.createElement('p', '', 'SCORE');
         this.scoreElement = this.createElement('span', '', '0');
         scoreBox.appendChild(scoreLabel);
         scoreBox.appendChild(this.scoreElement);
         scoresContainer.appendChild(scoreBox);
 
         const bestScoreBox = this.createElement('div', 'score-box');
-        const bestScoreLabel = this.createElement('p', '', 'РЕКОРД');
+        const bestScoreLabel = this.createElement('p', '', 'HIGH SCORE');
         this.bestScoreElement = this.createElement('span', '', '0');
         bestScoreBox.appendChild(bestScoreLabel);
         bestScoreBox.appendChild(this.bestScoreElement);
@@ -47,15 +48,15 @@ class UIManager {
         const gameInfo = this.createElement('div', 'game-info');
         
         const controls = this.createElement('div', 'controls');
-        const newGameBtn = this.createElement('button', 'btn', 'Новая игра');
+        const newGameBtn = this.createElement('button', 'btn', 'New Game');
         newGameBtn.onclick = () => this.newGame();
         controls.appendChild(newGameBtn);
 
-        const undoBtn = this.createElement('button', 'btn', 'Отменить');
+        const undoBtn = this.createElement('button', 'btn', 'Undo Move');
         undoBtn.onclick = () => this.undo();
         controls.appendChild(undoBtn);
 
-        const leaderboardBtn = this.createElement('button', 'btn', 'Рекорды');
+        const leaderboardBtn = this.createElement('button', 'btn', 'High Scores');
         leaderboardBtn.onclick = () => this.showLeaderboard();
         controls.appendChild(leaderboardBtn);
 
@@ -73,10 +74,37 @@ class UIManager {
         this.gridContainer.appendChild(this.gridElement);
         this.container.appendChild(this.gridContainer);
 
+         this.gameOverModal = this.createElement('div', 'game-over-modal');
+        const gameOverContent = this.createElement('div', 'modal-content');
+        
+        const gameOverTitle = this.createElement('h2', '', 'Game over!');
+        gameOverContent.appendChild(gameOverTitle);
+
+        const gameOverMessage = this.createElement('p', 'message', 'Score: ' + this.game.score);
+        gameOverContent.appendChild(gameOverMessage);
+
+        const inputGroup = this.createElement('div', 'input-group');
+        const nameInput = this.createElement('input', 'name-input', '');
+        nameInput.type = 'text';
+        nameInput.placeholder = 'Input your username';
+        inputGroup.appendChild(nameInput);
+        gameOverContent.appendChild(inputGroup);
+
+        const restartBtn = this.createElement('button', 'btn', 'New game');
+        restartBtn.onclick = () => {
+            this.gameOverModal.style.display = 'none';
+            this.newGame();
+        };
+        gameOverContent.appendChild(restartBtn);
+
+        this.gameOverModal.appendChild(gameOverContent);
+        document.body.appendChild(this.gameOverModal);
+
         this.updateDisplay(); 
     }
 
     updateDisplay() {
+        this.updateScore();
         this.updateGrid();
     }
 
@@ -98,4 +126,65 @@ class UIManager {
         }
     }
 
+    updateScore() {
+        this.scoreElement.textContent = this.game.score;
+    }
+
+    move(direction) {
+        const moved = this.game.move(direction);
+        if (moved) {
+            this.updateDisplay();
+            if (this.game.gameOver) {
+                this.showGameOver();
+            }
+        }
+    }
+
+    setupEventListeners() {
+        document.addEventListener('keydown', (e) => {
+            if (this.game.gameOver) return;
+            
+            switch (e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    this.move('left');
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    this.move('right');
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.move('up');
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.move('down');
+                    break;
+            }
+        });
+    }
+
+    showGameOver() {
+        const gameOverContent = this.gameOverModal.querySelector('.modal-content');
+        const message = gameOverContent.querySelector('.message');
+        message.textContent = `Game over! Score: ${this.game.score}`;
+        message.style.display = 'block';
+        
+        const inputGroup = gameOverContent.querySelector('.input-group');
+        inputGroup.style.display = 'block';
+        this.gameOverModal.style.display = 'flex';
+    }
+
+    newGame() {
+        this.game.reset();
+        this.updateDisplay();
+        this.gameOverModal.style.display = 'none';
+    }
+
+    undo() {
+        if (this.game.undo()) {
+            this.updateDisplay();
+        }
+    }
 }
