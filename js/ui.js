@@ -7,6 +7,8 @@ class UIManager {
         this.scoreElement = null;
         this.bestScoreElement = null;
         this.gameOverModal = null;
+        this.leaderboardModal = null;
+        this.leaderboardTable = null;
         this.createUI();
         this.setupEventListeners();
     }
@@ -90,6 +92,10 @@ class UIManager {
         inputGroup.appendChild(nameInput);
         gameOverContent.appendChild(inputGroup);
 
+        const saveBtn = this.createElement('button', 'btn', 'Сохранить результат');
+        saveBtn.onclick = () => this.saveScore(nameInput.value);
+        gameOverContent.appendChild(saveBtn);
+
         const restartBtn = this.createElement('button', 'btn', 'New game');
         restartBtn.onclick = () => {
             this.gameOverModal.style.display = 'none';
@@ -100,12 +106,31 @@ class UIManager {
         this.gameOverModal.appendChild(gameOverContent);
         document.body.appendChild(this.gameOverModal);
 
+        this.leaderboardModal = this.createElement('div', 'leaderboard-modal');
+        const leaderboardContent = this.createElement('div', 'modal-content');
+        
+        const leaderboardTitle = this.createElement('h2', '', 'Leaderboard');
+        leaderboardContent.appendChild(leaderboardTitle);
+
+        this.leaderboardTable = this.createElement('div', 'leaderboard-table');
+        leaderboardContent.appendChild(this.leaderboardTable);
+
+        const closeBtn = this.createElement('button', 'btn', 'Close');
+        closeBtn.onclick = () => this.leaderboardModal.style.display = 'none';
+        leaderboardContent.appendChild(closeBtn);
+
+        this.leaderboardModal.appendChild(leaderboardContent);
+        document.body.appendChild(this.leaderboardModal);
+
+        this.updateDisplay();
+
         this.updateDisplay(); 
     }
 
     updateDisplay() {
         this.updateScore();
         this.updateGrid();
+        this.updateBestScore();
     }
 
     updateGrid() {
@@ -128,6 +153,11 @@ class UIManager {
 
     updateScore() {
         this.scoreElement.textContent = this.game.score;
+    }
+
+    updateBestScore() {
+        const bestScore = storageManager.getBestScore();
+        this.bestScoreElement.textContent = bestScore;
     }
 
     move(direction) {
@@ -173,7 +203,29 @@ class UIManager {
         
         const inputGroup = gameOverContent.querySelector('.input-group');
         inputGroup.style.display = 'block';
+
+        const saveBtn = gameOverContent.querySelector('button[onclick*="saveScore"]');
+        saveBtn.style.display = 'inline-block';
+
         this.gameOverModal.style.display = 'flex';
+    }
+
+    saveScore(name) {
+        if (name.trim()) {
+            storageManager.saveScore(name, this.game.score);
+            
+            const gameOverContent = this.gameOverModal.querySelector('.modal-content');
+            const message = gameOverContent.querySelector('.message');
+            message.textContent = 'Ваш рекорд сохранен!';
+            
+            const inputGroup = gameOverContent.querySelector('.input-group');
+            inputGroup.style.display = 'none';
+            
+            const saveBtn = gameOverContent.querySelector('button[onclick*="saveScore"]');
+            saveBtn.style.display = 'none';
+            
+            this.updateBestScore();
+        }
     }
 
     newGame() {
@@ -186,5 +238,52 @@ class UIManager {
         if (this.game.undo()) {
             this.updateDisplay();
         }
+    }
+
+    showLeaderboard() {
+        const leaderboard = storageManager.getLeaderboard();
+        this.updateLeaderboardTable(leaderboard);
+        this.leaderboardModal.style.display = 'flex';
+    }
+
+    updateLeaderboardTable(leaderboard) {
+        this.leaderboardTable.innerHTML = '';
+        
+        if (leaderboard.length === 0) {
+            const noRecords = this.createElement('p', '', 'No records yet');
+            this.leaderboardTable.appendChild(noRecords);
+            return;
+        }
+
+        const table = this.createElement('table', 'leaderboard');
+        const headerRow = this.createElement('tr', '');
+        
+        const positionHeader = this.createElement('th', '', '#');
+        const nameHeader = this.createElement('th', '', 'Name');
+        const scoreHeader = this.createElement('th', '', 'Score');
+        const dateHeader = this.createElement('th', '', 'Date');
+        
+        headerRow.appendChild(positionHeader);
+        headerRow.appendChild(nameHeader);
+        headerRow.appendChild(scoreHeader);
+        headerRow.appendChild(dateHeader);
+        table.appendChild(headerRow);
+
+        leaderboard.forEach((record, index) => {
+            const row = this.createElement('tr', '');
+
+            const positionCell = this.createElement('td', '', (index + 1).toString());
+            const nameCell = this.createElement('td', '', record.name);
+            const scoreCell = this.createElement('td', '', record.score.toString());
+            const dateCell = this.createElement('td', '', record.date);
+            
+            row.appendChild(positionCell);
+            row.appendChild(nameCell);
+            row.appendChild(scoreCell);
+            row.appendChild(dateCell);
+            table.appendChild(row);
+        });
+
+        this.leaderboardTable.appendChild(table);
     }
 }
