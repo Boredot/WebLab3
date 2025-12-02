@@ -167,6 +167,44 @@ class UIManager {
                     break;
             }
         });
+
+        let touchStartX, touchStartY;
+        
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (!touchStartX || !touchStartY) return;
+
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (Math.abs(diffX) > 50) {
+                    if (diffX > 0) {
+                        this.move('right');
+                    } else {
+                        this.move('left');
+                    }
+                }
+            } else {
+                if (Math.abs(diffY) > 50) {
+                    if (diffY > 0) {
+                        this.move('down');
+                    } else {
+                        this.move('up');
+                    }
+                }
+            }
+
+            touchStartX = null;
+            touchStartY = null;
+        });
     }
 
     showGameOver() {
