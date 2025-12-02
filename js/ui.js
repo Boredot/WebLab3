@@ -63,14 +63,7 @@ class UIManager {
         this.container.appendChild(gameInfo);
 
         this.gridContainer = this.createElement('div', 'grid-container');
-        this.gridElement = this.createElement('div', 'grid');
-        
-        for (let i = 0; i < 16; i++) {
-            const cell = this.createElement('div', 'grid-cell');
-            this.gridElement.appendChild(cell);
-        }
-        
-        this.gridContainer.appendChild(this.gridElement);
+        this.createGrid();
         this.container.appendChild(this.gridContainer);
 
         const footer = this.createElement('footer', 'footer');
@@ -85,28 +78,51 @@ class UIManager {
         this.updateDisplay(); 
     }
 
-    updateDisplay() {
-        this.updateScore();
-        this.updateGrid();
-        this.updateBestScore();
-    }
+    createGrid() {
+        if (this.gridElement && this.gridElement.parentNode) {
+            this.gridElement.parentNode.removeChild(this.gridElement);
+        }
 
-    updateGrid() {
-        const existingTiles = this.gridElement.querySelectorAll('.tile');
-        existingTiles.forEach(tile => tile.remove());
+        this.gridElement = this.createElement('div', 'grid');
 
+        const previousGrid = this.game.moves.length > 0 ? 
+            this.game.moves[this.game.moves.length - 1].grid : 
+            null;
+        
         for (let i = 0; i < this.game.size; i++) {
             for (let j = 0; j < this.game.size; j++) {
                 const value = this.game.grid[i][j];
+                
+                const cell = this.createElement('div', 'grid-cell');
+                
                 if (value !== 0) {
                     const tile = this.createElement('div', `tile tile-${value}`, value.toString());
                     
                     tile.style.gridColumn = j + 1;
                     tile.style.gridRow = i + 1;
-                    this.gridElement.appendChild(tile);
+                    
+                    if (previousGrid) {
+                        const prevValue = previousGrid[i][j];
+                        if (prevValue === 0) {
+                            tile.classList.add('tile-new');
+                        } else if (prevValue !== value) {
+                            tile.classList.add('tile-merged');
+                        }
+                    } else {
+
+                    }
+                    cell.appendChild(tile);
                 }
+                this.gridElement.appendChild(cell);
             }
         }
+        this.gridContainer.appendChild(this.gridElement);
+    }
+
+    updateDisplay() {
+        this.updateScore();
+        this.createGrid();
+        this.updateBestScore();
     }
 
     updateScore() {
@@ -131,7 +147,7 @@ class UIManager {
     setupEventListeners() {
         document.addEventListener('keydown', (e) => {
             if (this.game.gameOver) return;
-            
+
             switch (e.key) {
                 case 'ArrowLeft':
                     e.preventDefault();

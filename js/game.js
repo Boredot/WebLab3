@@ -16,7 +16,7 @@ class Game2048 {
         for (let i = 0; i < this.size; i++) {
             this.grid[i] = [];
             for (let j = 0; j < this.size; j++) {
-                this.grid[i][j] = 0;
+                this.grid[i][j] = 4;
             }
         }
     }
