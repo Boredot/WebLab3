@@ -168,6 +168,18 @@ class UIManager {
             }
         });
 
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
         let touchStartX, touchStartY;
         
         document.addEventListener('touchstart', (e) => {
